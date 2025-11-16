@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'core/services/onboarding_service.dart';
 import 'features/onboarding/presentation/pages/onboarding_screen.dart';
-import 'features/home/home_page.dart';
+import 'features/home/presentation/home_page.dart';
 import 'app/theme/color_schemes.dart';
+import 'app/presentation/pages/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  // Khởi tạo SharedPreferences
+  // Initialize SharedPreferences for app data storage
   await SharedPreferences.getInstance();
 
   runApp(
@@ -69,101 +69,12 @@ class MyApp extends StatelessWidget {
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
-      // Kiểm tra onboarding status để hiển thị màn hình phù hợp
+      // Check onboarding status to display appropriate screen
       home: const SplashScreen(),
       routes: {
         '/onboarding': (context) => const OnboardingScreen(),
         '/home': (context) => const HomePage(),
       },
-    );
-  }
-}
-
-/// Splash screen checks onboarding status
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _checkOnboardingStatus();
-  }
-
-  Future<void> _checkOnboardingStatus() async {
-    // Delay nhỏ cho smooth transition
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (!mounted) return;
-
-    // Kiểm tra xem user đã hoàn tất onboarding chưa
-    final isOnboarded = await OnboardingService.isOnboarded();
-
-    if (!mounted) return;
-
-    if (isOnboarded) {
-      // Đã onboard → đi thẳng Home
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
-    } else {
-      // Chưa onboard → hiển thị onboarding
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.primary80,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Logo/Icon
-            Container(
-              width: 100,
-              height: 100,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.shield_rounded,
-                size: 60,
-                color: AppColors.primary80,
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'AntiScam',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Bảo vệ bạn khỏi lừa đảo',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 40),
-            const CircularProgressIndicator(
-              color: Colors.white,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

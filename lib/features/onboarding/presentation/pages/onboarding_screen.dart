@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/animations/animations.dart';
 import '../../../../app/theme/color_schemes.dart';
 import '../../../../core/services/onboarding_service.dart';
-import '../../../home/home_page.dart';
+import '../../../home/presentation/home_page.dart';
 import '../widgets/step_indicator.dart';
 import '../screens/welcome_screen.dart';
 import '../screens/security_screen.dart';

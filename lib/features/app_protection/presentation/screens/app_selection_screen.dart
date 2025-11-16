@@ -1,6 +1,8 @@
 import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:easy_localization/easy_localization.dart';
+import '../../../../app/theme/color_schemes.dart';
 
 /// Screen for selecting apps to protect with popup monitoring
 class AppSelectionScreen extends StatefulWidget {
@@ -72,124 +74,262 @@ class _AppSelectionScreenState extends State<AppSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FA),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Bảo vệ ứng dụng"),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-        centerTitle: true,
-        elevation: 2,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'onboarding.appSelection.title'.tr(),
+          style: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
+        ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: AppColors.primary,
+              ),
+            )
           : Column(
               children: [
+                // Header info
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'onboarding.appSelection.subtitle'.tr(),
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey[600],
+                          height: 1.5,
+                        ),
+                      ),
+                      if (_selectedPackages.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary10,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.shield,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'onboarding.appSelection.protectingCount'
+                                    .tr(namedArgs: {
+                                  'count': '${_selectedPackages.length}'
+                                }),
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
                 // Search bar
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: TextField(
                     onChanged: _onSearch,
                     decoration: InputDecoration(
-                      hintText: "Tìm kiếm ứng dụng...",
-                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'onboarding.appSelection.searchPlaceholder'.tr(),
+                      hintStyle: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 15,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Colors.grey[400],
+                      ),
                       filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.all(12),
+                      fillColor: AppColors.default20,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: AppColors.primary,
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
                 ),
 
-                // Selected count info
-                if (_selectedPackages.isNotEmpty)
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.deepPurple.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.shield_outlined,
-                          color: Colors.deepPurple,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Đang bảo vệ ${_selectedPackages.length} ứng dụng',
-                          style: const TextStyle(
-                            color: Colors.deepPurple,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
 
                 // Apps list
                 Expanded(
-                  child: ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: _filtered.length,
-                    itemBuilder: (context, i) {
-                      final app = _filtered[i];
-                      final selected = _selectedPackages.contains(
-                        app.packageName,
-                      );
+                  child: _filtered.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                size: 64,
+                                color: Colors.grey[300],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'onboarding.appSelection.noAppsFound'.tr(),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          itemCount: _filtered.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (context, i) {
+                            final app = _filtered[i];
+                            final selected = _selectedPackages.contains(
+                              app.packageName,
+                            );
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
+                            return _buildAppCard(app, selected);
+                          },
                         ),
-                        elevation: 0.5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: ListTile(
-                          leading: app is ApplicationWithIcon
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.memory(
-                                    app.icon,
-                                    width: 40,
-                                    height: 40,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : const Icon(Icons.apps, size: 40),
-                          title: Text(
-                            app.appName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          subtitle: Text(
-                            app.packageName,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                          ),
-                          trailing: Switch(
-                            value: selected,
-                            activeColor: Colors.deepPurple,
-                            onChanged: (v) => _toggleApp(app.packageName, v),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _buildAppCard(Application app, bool selected) {
+    return GestureDetector(
+      onTap: () => _toggleApp(app.packageName, !selected),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary10 : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? AppColors.primary : Colors.grey[200]!,
+            width: selected ? 2 : 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            // App icon
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.grey[100],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: app is ApplicationWithIcon
+                    ? Image.memory(
+                        app.icon,
+                        width: 48,
+                        height: 48,
+                        fit: BoxFit.cover,
+                      )
+                    : Icon(
+                        Icons.apps,
+                        size: 28,
+                        color: Colors.grey[400],
+                      ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // App info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    app.appName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      color: selected ? AppColors.primary : Colors.black87,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    app.packageName,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Checkbox
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? AppColors.primary : Colors.transparent,
+                border: Border.all(
+                  color: selected ? AppColors.primary : Colors.grey[300]!,
+                  width: 2,
+                ),
+              ),
+              child: selected
+                  ? const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

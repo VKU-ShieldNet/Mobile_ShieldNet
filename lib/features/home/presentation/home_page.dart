@@ -5,13 +5,11 @@ import 'package:flutter/foundation.dart';
 import '../../../app/theme/color_schemes.dart';
 import '../../../core/services/bubble_service.dart';
 import '../../../core/services/onboarding_service.dart';
+import '../../../core/services/permission_service.dart';
 import '../../bubble_protection/presentation/screens/bubble_control_screen.dart';
 import '../../onboarding/presentation/pages/onboarding_screen.dart';
 import '../../bubble_protection/presentation/screens/bubble_setup_intro_screen.dart';
-import 'widgets/quick_check_card.dart';
-import 'widgets/bottom_sheet_button.dart';
-import 'widgets/section_header.dart';
-import 'widgets/bubble_control_card.dart';
+import 'widgets/widgets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -29,6 +27,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _checkPermissions();
+    _requestNotificationPermission();
   }
 
   Future<void> _checkPermissions() async {
@@ -44,6 +43,30 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       if (mounted) setState(() => _isCheckingPermissions = false);
+    }
+  }
+
+  /// Request notification permission on first app launch
+  Future<void> _requestNotificationPermission() async {
+    try {
+      // Check if already granted
+      final hasPermission = await PermissionService.checkNotificationPermission();
+      if (hasPermission) {
+        debugPrint('✅ Notification permission already granted');
+        return;
+      }
+
+      // Request permission
+      debugPrint('📱 Requesting notification permission...');
+      final granted = await PermissionService.requestNotificationPermission();
+
+      if (granted) {
+        debugPrint('✅ Notification permission granted');
+      } else {
+        debugPrint('❌ Notification permission denied');
+      }
+    } catch (e) {
+      debugPrint('❌ Error requesting notification permission: $e');
     }
   }
 
@@ -147,9 +170,7 @@ class _HomePageState extends State<HomePage> {
                 title: 'home.quickCheck.image.title'.tr(),
                 description: 'home.quickCheck.image.description'.tr(),
                 iconColor: AppColors.primary70,
-                onTap: () {
-                  _showImageCheckBottomSheet(context);
-                },
+                onTap: () => ImageCheckBottomSheet.show(context),
               ),
               const SizedBox(height: 12),
               QuickCheckCard(
@@ -157,9 +178,7 @@ class _HomePageState extends State<HomePage> {
                 title: 'home.quickCheck.link.title'.tr(),
                 description: 'home.quickCheck.link.description'.tr(),
                 iconColor: AppColors.primary70,
-                onTap: () {
-                  _showLinkCheckBottomSheet(context);
-                },
+                onTap: () => LinkCheckBottomSheet.show(context),
               ),
               const SizedBox(height: 12),
               QuickCheckCard(
@@ -167,9 +186,7 @@ class _HomePageState extends State<HomePage> {
                 title: 'home.quickCheck.message.title'.tr(),
                 description: 'home.quickCheck.message.description'.tr(),
                 iconColor: AppColors.primary70,
-                onTap: () {
-                  _showMessageCheckBottomSheet(context);
-                },
+                onTap: () => MessageCheckBottomSheet.show(context),
               ),
 
               const SizedBox(height: 40),
@@ -193,263 +210,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-
-  void _showImageCheckBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'home.quickCheck.image.bottomSheet.title'.tr(),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'home.quickCheck.image.bottomSheet.subtitle'.tr(),
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey[600],
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(
-                  child: BottomSheetButton(
-                    icon: Icons.photo_library_outlined,
-                    label: 'home.quickCheck.image.bottomSheet.gallery'.tr(),
-                    onTap: () {
-                      Navigator.pop(context);
-                      // TODO: Implement gallery pick
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('home.developing'.tr())),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: BottomSheetButton(
-                    icon: Icons.camera_alt_outlined,
-                    label: 'home.quickCheck.image.bottomSheet.camera'.tr(),
-                    onTap: () {
-                      Navigator.pop(context);
-                      // TODO: Implement camera
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('home.developing'.tr())),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showLinkCheckBottomSheet(BuildContext context) {
-    final controller = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          left: 24,
-          right: 24,
-          top: 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'home.quickCheck.link.bottomSheet.title'.tr(),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: 'home.quickCheck.link.bottomSheet.placeholder'.tr(),
-                prefixIcon: const Icon(Icons.link),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                filled: true,
-                fillColor: Colors.grey[50],
-              ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // TODO: Implement link check
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('home.developing'.tr())),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'home.quickCheck.checkButton'.tr(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showMessageCheckBottomSheet(BuildContext context) {
-    final controller = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          left: 24,
-          right: 24,
-          top: 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'home.quickCheck.message.bottomSheet.title'.tr(),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: controller,
-              maxLines: 5,
-              decoration: InputDecoration(
-                hintText: 'home.quickCheck.message.bottomSheet.placeholder'.tr(),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                filled: true,
-                fillColor: Colors.grey[50],
-              ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // TODO: Implement message check
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('home.developing'.tr())),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'home.quickCheck.message.bottomSheet.checkButton'.tr(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _navigateToBubbleControl(BuildContext context) async {
     // Check if permissions are already granted
     final hasOverlay = await BubbleService.hasOverlayPermission();
     final hasAccessibility = await BubbleService.hasAccessibilityPermission();
-    
+
     if (!context.mounted) return;
-    
+
     if (hasOverlay && hasAccessibility) {
       // Permissions granted, go directly to bubble control
       Navigator.push(

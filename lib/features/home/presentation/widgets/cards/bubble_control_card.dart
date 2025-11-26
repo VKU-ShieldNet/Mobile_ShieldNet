@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-import '../../../../app/theme/color_schemes.dart';
-import 'bubble_status_badge.dart';
+import '../../../../../app/theme/color_schemes.dart';
+import '../bubble_status_badge.dart';
+
 
 /// Modern bubble control card with status indicator
 class BubbleControlCard extends StatelessWidget {
@@ -51,7 +52,7 @@ class BubbleControlCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            
+
             // Content
             Expanded(
               child: Column(
@@ -76,7 +77,7 @@ class BubbleControlCard extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Status and arrow
             Column(
               mainAxisAlignment: MainAxisAlignment.center,

@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkOnboardingStatus() async {
     // Small delay for smooth transition
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(seconds: 2)); // Increased from 500ms to 2s
 
     if (!mounted) return;
 
